@@ -12,9 +12,12 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="style.css?v=3" />
+    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="stylesheet" href="tools.css?v=4" />
     <script src="music.js" defer></script>
-    <script src="app.js?v=3" defer></script>
+    <script src="practice.js?v=4" defer></script>
+    <script src="app.js?v=4" defer></script>
+    <script src="tools.js?v=4" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Pular para o conteúdo</a>
@@ -41,6 +44,12 @@
             <path d="M5 4h14v17l-7-4-7 4zM9 8h6" /></svg
           ><span class="nav-label">Meus shapes</span>
           <span id="savedCount">0</span>
+        </button>
+        <button id="navTools" class="nav">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 20 4-16h4l4 16zM4 20h16M12 13l6-8" />
+          </svg>
+          <span class="nav-label">Praticar</span>
         </button>
       </nav>
       <div class="sidebar-bottom">
@@ -353,7 +362,387 @@
               </button>
             </div>
           </div>
+          <div class="library-toolbar">
+            <label class="search-field"
+              ><span class="sr-only">Buscar shapes</span
+              ><input
+                id="shapeSearch"
+                type="search"
+                placeholder="Buscar por título, aluno ou anotação…"
+                maxlength="100"
+            /></label>
+            <label class="sr-only" for="shapeFilter">Filtrar coleção</label
+            ><select id="shapeFilter">
+              <option value="all">Todos os shapes</option>
+              <option value="favorites">Favoritos</option>
+            </select>
+            <label class="sr-only" for="shapeSort">Ordenar coleção</label
+            ><select id="shapeSort">
+              <option value="recent">Mais recentes</option>
+              <option value="name">Título A–Z</option>
+            </select>
+            <button id="backupExport" class="button small">↓ Backup JSON</button
+            ><button id="backupImport" class="button small">↑ Importar</button
+            ><input
+              id="backupFile"
+              type="file"
+              accept=".json,application/json"
+              hidden
+            />
+          </div>
+          <p class="library-note" id="librarySummary" aria-live="polite">
+            Exporte um backup para guardar seus shapes e transferir para outro
+            navegador.
+          </p>
           <div id="savedShapes" class="saved-grid"></div>
+        </section>
+        <section id="toolsView" hidden aria-labelledby="toolsTitle">
+          <div class="tools-heading">
+            <div>
+              <div class="eyebrow">DA EXPLORAÇÃO À PRÁTICA</div>
+              <h1 id="toolsTitle">Seu próximo <span>nível.</span></h1>
+              <p>Afine, encontre o pulso e faça a música acontecer.</p>
+            </div>
+            <div class="tools-volume">
+              <label for="masterVolume"
+                >Volume geral <output id="masterVolumeValue">70%</output></label
+              ><input
+                id="masterVolume"
+                type="range"
+                min="0"
+                max="100"
+                value="70"
+              />
+            </div>
+          </div>
+          <div class="tools-grid">
+            <section
+              class="panel tool-card"
+              id="metronomeCard"
+              aria-labelledby="metronomeTitle"
+            >
+              <div class="tool-heading">
+                <div>
+                  <span class="section-number">01 / RITMO</span>
+                  <h2 id="metronomeTitle">Encontre o pulso.</h2>
+                  <p>Um clique preciso para acompanhar seu estudo.</p>
+                </div>
+                <span class="tool-glyph" aria-hidden="true">♩</span>
+              </div>
+              <div class="tempo-display">
+                <button
+                  id="bpmDown"
+                  class="step-button"
+                  aria-label="Diminuir BPM"
+                >
+                  −</button
+                ><label
+                  ><input
+                    id="metroBpm"
+                    type="number"
+                    min="40"
+                    max="240"
+                    value="100"
+                    aria-label="Andamento em BPM"
+                  /><span>BPM</span></label
+                ><button
+                  id="bpmUp"
+                  class="step-button"
+                  aria-label="Aumentar BPM"
+                >
+                  +
+                </button>
+              </div>
+              <input
+                id="metroRange"
+                type="range"
+                min="40"
+                max="240"
+                value="100"
+                aria-label="Ajustar andamento"
+              />
+              <div id="beatLights" class="beat-lights" aria-hidden="true"></div>
+              <div class="tool-controls">
+                <label
+                  >Compasso<select id="metroBeats">
+                    <option value="2">2/4</option>
+                    <option value="3">3/4</option>
+                    <option value="4" selected>4/4</option>
+                    <option value="5">5/4</option>
+                    <option value="6">6/4</option>
+                    <option value="7">7/4</option>
+                  </select></label
+                ><label
+                  >Subdivisão<select id="metroSubdivision">
+                    <option value="1">Semínimas</option>
+                    <option value="2">Colcheias</option>
+                    <option value="3">Tercinas</option>
+                    <option value="4">Semicolcheias</option>
+                  </select></label
+                >
+              </div>
+              <label class="tool-check"
+                ><input id="metroAccent" type="checkbox" checked />Acentuar a
+                primeira batida</label
+              >
+              <div class="tool-actions">
+                <button
+                  id="metroStart"
+                  class="button primary"
+                  aria-pressed="false"
+                >
+                  ▶ Iniciar metrônomo</button
+                ><button
+                  id="tapTempo"
+                  class="button"
+                  title="Toque pelo menos duas vezes no ritmo desejado"
+                >
+                  Tap tempo
+                </button>
+              </div>
+              <p class="tool-status" id="metroStatus" role="status">
+                Pronto para praticar.
+              </p>
+            </section>
+            <section
+              class="panel tool-card tuner-card"
+              aria-labelledby="tunerTitle"
+            >
+              <div class="tool-heading">
+                <div>
+                  <span class="section-number">02 / AFINAÇÃO</span>
+                  <h2 id="tunerTitle">Comece em sintonia.</h2>
+                  <p>Toque uma corda por vez e deixe o som sustentar.</p>
+                </div>
+                <span class="tool-glyph" aria-hidden="true">≋</span>
+              </div>
+              <div class="tuner-reading">
+                <strong id="tunerNote">—</strong
+                ><span id="tunerFrequency">Aguardando uma nota</span
+                ><span id="tunerCents"
+                  >Ative o microfone ou ouça uma referência.</span
+                >
+              </div>
+              <div class="tuner-meter" aria-hidden="true">
+                <span>♭</span>
+                <div><i id="tunerNeedle"></i><b></b></div>
+                <span>♯</span>
+              </div>
+              <div class="tool-controls">
+                <label
+                  >Afinação de referência<select
+                    id="tunerTuning"
+                  ></select></label
+                ><label
+                  >Lá de referência<select id="tunerCalibration">
+                    <option value="432">432 Hz</option>
+                    <option value="440" selected>440 Hz</option>
+                    <option value="442">442 Hz</option>
+                  </select></label
+                >
+              </div>
+              <div
+                class="reference-strings"
+                id="referenceStrings"
+                aria-label="Ouvir cordas de referência"
+              ></div>
+              <button
+                id="tunerStart"
+                class="button primary"
+                aria-pressed="false"
+              >
+                Ativar microfone
+              </button>
+              <p id="tunerStatus" class="tool-status" role="status">
+                O microfone é opcional. O áudio é analisado neste dispositivo,
+                sem gravação ou envio.
+              </p>
+            </section>
+            <section
+              class="panel tool-card progression-card"
+              aria-labelledby="progressionTitle"
+            >
+              <div class="tool-heading">
+                <div>
+                  <span class="section-number">03 / HARMONIA</span>
+                  <h2 id="progressionTitle">Acordes que se conectam.</h2>
+                  <p>Explore o campo harmônico e monte seu acompanhamento.</p>
+                </div>
+                <span class="tool-glyph" aria-hidden="true">↗</span>
+              </div>
+              <div class="tool-controls">
+                <label>Tonalidade<select id="harmonyRoot"></select></label
+                ><label
+                  >Modo<select id="harmonyMode">
+                    <option value="major">Maior</option>
+                    <option value="minor">Menor natural</option>
+                  </select></label
+                ><label
+                  >Progressão<select id="progressionPreset">
+                    <option value="pop">I – V – vi – IV</option>
+                    <option value="jazz">ii – V – I</option>
+                    <option value="classic">I – IV – V</option>
+                    <option value="minor">i – VI – III – VII</option>
+                  </select></label
+                ><button id="loadProgression" class="button small">
+                  Carregar
+                </button>
+              </div>
+              <p class="tool-caption">
+                CAMPO HARMÔNICO
+                <span>Clique para adicionar um acorde à sequência.</span>
+              </p>
+              <div id="harmonicField" class="harmonic-field"></div>
+              <div class="sequence-heading">
+                <span class="tiny-label"
+                  >SUA SEQUÊNCIA <span id="sequenceCount">0 / 16</span></span
+                ><button id="clearProgression" class="text-button">
+                  Limpar sequência
+                </button>
+              </div>
+              <div
+                id="progressionSequence"
+                class="progression-sequence"
+                aria-label="Acordes da sequência"
+              ></div>
+              <div class="tool-controls progression-settings">
+                <label
+                  >Compassos por acorde<select id="barsPerChord">
+                    <option value="1">1 compasso</option>
+                    <option value="2">2 compassos</option>
+                    <option value="4">4 compassos</option>
+                  </select></label
+                ><label class="tool-check"
+                  ><input
+                    id="progressionLoop"
+                    type="checkbox"
+                    checked
+                  />Repetir</label
+                ><label class="tool-check"
+                  ><input id="progressionClick" type="checkbox" checked />Ouvir
+                  clique</label
+                ><span class="tempo-shared" id="progressionTempo"
+                  >100 BPM · 4/4</span
+                >
+              </div>
+              <div class="tool-actions">
+                <button
+                  id="progressionStart"
+                  class="button primary"
+                  aria-pressed="false"
+                >
+                  ▶ Tocar sequência</button
+                ><button id="progressionToStudio" class="button">
+                  Abrir acorde no estúdio ↗
+                </button>
+              </div>
+              <p id="progressionStatus" class="tool-status" role="status">
+                O andamento acompanha o metrônomo.
+              </p>
+            </section>
+            <section
+              class="panel tool-card ear-card"
+              aria-labelledby="earTitle"
+            >
+              <div class="tool-heading">
+                <div>
+                  <span class="section-number">04 / PERCEPÇÃO</span>
+                  <h2 id="earTitle">Treine seu ouvido.</h2>
+                  <p>Ouça duas notas e reconheça a distância entre elas.</p>
+                </div>
+                <span class="tool-glyph" aria-hidden="true">♫</span>
+              </div>
+              <div class="ear-stats">
+                <div>
+                  <strong id="earCorrect">0</strong><span>acertos</span>
+                </div>
+                <div>
+                  <strong id="earTotal">0</strong><span>respondidas</span>
+                </div>
+                <div>
+                  <strong id="earAccuracy">—</strong><span>precisão</span>
+                </div>
+              </div>
+              <button id="earResetStats" class="text-button">
+                Zerar contagem de acertos
+              </button>
+              <label class="tool-label"
+                >Dificuldade<select id="earDifficulty">
+                  <option value="basic">Essenciais · 4 intervalos</option>
+                  <option value="full">Completo · 12 intervalos</option>
+                </select></label
+              >
+              <div class="tool-actions">
+                <button id="earNew" class="button primary">
+                  ♫ Novo desafio</button
+                ><button id="earReplay" class="button" disabled>
+                  Ouvir novamente
+                </button>
+              </div>
+              <div id="earAnswers" class="ear-answers"></div>
+              <p id="earFeedback" class="tool-status" role="status">
+                Clique em Novo desafio para começar. Vale a primeira resposta.
+              </p>
+            </section>
+            <section
+              class="panel tool-card study-card"
+              aria-labelledby="studyTitle"
+            >
+              <div class="tool-heading">
+                <div>
+                  <span class="section-number">05 / CONSTÂNCIA</span>
+                  <h2 id="studyTitle">Tempo bem tocado.</h2>
+                  <p>Reserve alguns minutos para tocar com intenção.</p>
+                </div>
+                <span class="tool-glyph" aria-hidden="true">◷</span>
+              </div>
+              <div
+                class="study-readout"
+                id="studyTime"
+                role="timer"
+                aria-label="Tempo restante"
+              >
+                15:00
+              </div>
+              <div class="tool-controls">
+                <label
+                  >Sessão<select id="studyMinutes">
+                    <option value="5">5 minutos</option>
+                    <option value="10">10 minutos</option>
+                    <option value="15" selected>15 minutos</option>
+                    <option value="20">20 minutos</option>
+                    <option value="30">30 minutos</option>
+                  </select></label
+                ><label
+                  >Foco<select id="studyFocus">
+                    <option>Aquecimento e técnica</option>
+                    <option>Acordes e trocas</option>
+                    <option>Escalas e improvisação</option>
+                    <option>Repertório</option>
+                    <option>Percepção musical</option>
+                  </select></label
+                >
+              </div>
+              <div class="tool-actions">
+                <button id="studyStart" class="button primary">
+                  ▶ Iniciar sessão</button
+                ><button id="studyReset" class="button">Reiniciar</button>
+              </div>
+              <p class="tool-status" id="studyStatus" role="status">
+                Seu progresso fica salvo neste navegador.
+              </p>
+              <div class="study-summary">
+                <div>
+                  <strong id="studyToday">0 min</strong
+                  ><span>concluídos hoje</span>
+                </div>
+                <div>
+                  <strong id="studySessions">0</strong
+                  ><span>sessões concluídas</span>
+                </div>
+              </div>
+            </section>
+          </div>
         </section>
         <footer>
           <span><b>fretlab.</b> Um espaço para a sua música.</span
@@ -409,6 +798,16 @@
       <p><b>Explorar:</b> selecione quantas notas quiser em cada corda.</p>
       <p><b>Acordes:</b> uma nota por corda, como uma digitação real.</p>
       <p>
+        <b>Praticar:</b> use metrônomo, afinador, progressões, treino de ouvido
+        e timer. O metrônomo acompanha o estúdio; a barra flutuante permite
+        parar o som. Esc interrompe o áudio e desliga o microfone.
+      </p>
+      <p>
+        <b>Sua coleção:</b> busque, favorite e duplique shapes em Meus shapes.
+        Exporte o Backup JSON para transferir a coleção; a importação preserva
+        shapes já existentes.
+      </p>
+      <p>
         <b>Escalas:</b> marque várias posições e defina a tônica para
         identificar o modo.
       </p>
@@ -439,6 +838,11 @@
     >
       ?
     </button>
+    <div class="transport-dock" id="transportDock" hidden>
+      <span class="status-dot"></span><span id="transportLabel">Metrônomo</span
+      ><button id="transportOpen" class="text-button">Praticar ↗</button
+      ><button id="transportStop" class="button small">■ Parar</button>
+    </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </body>
 </html>

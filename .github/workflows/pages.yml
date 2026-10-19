@@ -28,12 +28,16 @@ jobs:
       - name: Preparar Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: "22"
       - name: Verificar JavaScript e identificação musical
         run: |
           node --check dist/app.js
           node --check dist/music.js
+          node --check dist/practice.js
+          node --check dist/tools.js
           node tests/music.cjs
+          node tests/practice.cjs
+          node tests/tools.cjs
       - name: Configurar Pages
         uses: actions/configure-pages@v5
       - name: Enviar site estático

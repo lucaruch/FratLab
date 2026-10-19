@@ -110,7 +110,7 @@ function change(fn) {
   render();
   persist();
 }
-function history(dir) {
+function navigateHistory(dir) {
   const from = dir === "undo" ? undoStack : redoStack,
     to = dir === "undo" ? redoStack : undoStack;
   if (!from.length) return;
@@ -462,8 +462,8 @@ $("#clear").onclick = () => {
     state.notes = "";
   });
 };
-$("#undo").onclick = () => history("undo");
-$("#redo").onclick = () => history("redo");
+$("#undo").onclick = () => navigateHistory("undo");
+$("#redo").onclick = () => navigateHistory("redo");
 $$("[data-mode]").forEach(
   (b) =>
     (b.onclick = () =>
@@ -725,23 +725,34 @@ $("#generate").onclick = () => {
   presetTab === "chords" ? loadChord(r, i) : loadScale(r, i);
 };
 function showView(view) {
-  const lib = view === "library";
-  $("#studioView").hidden = lib;
-  $("#libraryView").hidden = !lib;
-  $("#navStudio").classList.toggle("active", !lib);
-  $("#navLibrary").classList.toggle("active", lib);
-  $(".page-title").hidden = lib;
-  $("#viewBreadcrumb").textContent = lib ? "Meus shapes" : "Estúdio";
-  $("#navStudio").toggleAttribute("aria-current", !lib);
-  $("#navLibrary").toggleAttribute("aria-current", lib);
-  (lib ? $("#navLibrary") : $("#navStudio")).setAttribute(
-    "aria-current",
-    "page",
+  window.history.replaceState(
+    null,
+    "",
+    { studio: "#estudio", library: "#shapes", tools: "#praticar" }[view],
   );
-  if (lib) renderLibrary();
+  for (const [name, nav, panel] of [
+    ["studio", "navStudio", "studioView"],
+    ["library", "navLibrary", "libraryView"],
+    ["tools", "navTools", "toolsView"],
+  ]) {
+    const active = view === name;
+    $("#" + panel).hidden = !active;
+    $("#" + nav).classList.toggle("active", active);
+    if (active) $("#" + nav).setAttribute("aria-current", "page");
+    else $("#" + nav).removeAttribute("aria-current");
+  }
+  $(".page-title").hidden = view !== "studio";
+  $("#viewBreadcrumb").textContent = {
+    studio: "Estúdio",
+    library: "Meus shapes",
+    tools: "Praticar",
+  }[view];
+  if (view === "library") renderLibrary();
+  if (view !== "tools") window.FretStudio?.stopTuner();
 }
 $("#navStudio").onclick = () => showView("studio");
 $("#navLibrary").onclick = () => showView("library");
+$("#navTools").onclick = () => showView("tools");
 $("#newShape").onclick = () => {
   change(() => {
     state.id = null;
@@ -755,6 +766,10 @@ $("#newShape").onclick = () => {
   showView("studio");
 };
 $("#saveShape").onclick = () => {
+  if (!state.id && saved.length >= 500)
+    return toast(
+      "Sua coleção chegou a 500 shapes. Exporte um backup e organize os shapes.",
+    );
   if (!state.selected.length)
     return toast("Marque pelo menos uma nota antes de salvar.");
   const previous = structuredClone(saved),
@@ -783,8 +798,26 @@ $("#saveShape").onclick = () => {
   toast(i < 0 ? "Shape salvo em Meus shapes." : "Shape atualizado.");
 };
 function renderLibrary() {
-  $("#savedShapes").innerHTML = saved.length
-    ? saved
+  const search = $("#shapeSearch").value.trim().toLocaleLowerCase("pt-BR");
+  const items = saved.filter(
+    (s) =>
+      (!search ||
+        [s.title, s.student, s.notes].some((v) =>
+          String(v || "")
+            .toLocaleLowerCase("pt-BR")
+            .includes(search),
+        )) &&
+      ($("#shapeFilter").value !== "favorites" || s.favorite),
+  );
+  items.sort(
+    $("#shapeSort").value === "name"
+      ? (a, b) => a.title.localeCompare(b.title, "pt-BR")
+      : (a, b) => Date.parse(b.updated) - Date.parse(a.updated),
+  );
+  $("#librarySummary").textContent =
+    `${items.length} de ${saved.length} shapes · Exporte um backup para guardar sua coleção.`;
+  $("#savedShapes").innerHTML = items.length
+    ? items
         .map((s) => {
           const previous = state;
           let svg = "";
@@ -795,10 +828,10 @@ function renderLibrary() {
           } finally {
             state = previous;
           }
-          return `<article class="saved-card"><span class="tiny-label">${esc(M.tunings[s.tuning]?.name || "Guitarra")}</span><h3>${esc(s.title || "Shape livre")}</h3><p>${esc(s.student ? "Aluno(a): " + s.student : "Sua coleção de ideias")} · ${new Date(s.updated).toLocaleDateString("pt-BR")}</p>${svg}<button class="button small" data-load="${esc(s.id)}">Abrir no estúdio ↗</button><button class="text-button" data-delete="${esc(s.id)}">Excluir</button></article>`;
+          return `<article class="saved-card"><div class="saved-card-heading"><span class="tiny-label">${esc(M.tunings[s.tuning]?.name || "Guitarra")}</span><button class="favorite-button" data-favorite="${esc(s.id)}" aria-label="${s.favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}" aria-pressed="${!!s.favorite}">${s.favorite ? "★" : "☆"}</button></div><h3>${esc(s.title || "Shape livre")}</h3><p>${esc(s.student ? "Aluno(a): " + s.student : "Sua coleção de ideias")} · ${new Date(s.updated).toLocaleDateString("pt-BR")}</p>${svg}<button class="button small" data-load="${esc(s.id)}">Abrir no estúdio ↗</button><button class="text-button" data-duplicate="${esc(s.id)}">Duplicar</button><button class="text-button" data-delete="${esc(s.id)}">Excluir</button></article>`;
         })
         .join("")
-    : '<div class="library-empty"><div class="empty-icon">♬</div><h3>Uma coleção só sua.</h3><p>Crie um shape no estúdio e clique em “Salvar shape”.</p></div>';
+    : `<div class="library-empty"><div class="empty-icon">♬</div><h3>${saved.length ? "Nenhum shape por aqui." : "Uma coleção só sua."}</h3><p>${saved.length ? "Ajuste a busca ou o filtro para encontrar seus shapes." : "Crie um shape no estúdio e clique em “Salvar shape”."}</p></div>`;
 }
 let deletedShape = null;
 $("#savedShapes").onclick = (e) => {
@@ -832,8 +865,26 @@ $("#savedShapes").onclick = (e) => {
   }
 };
 let audioCtx = null,
+  audioMaster = null,
+  audioLevel = 0.7,
   activeVoices = [],
   audioTimer = null;
+async function ensureAudio() {
+  audioCtx =
+    audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioMaster) {
+    audioMaster = audioCtx.createGain();
+    audioMaster.gain.value = audioLevel;
+    audioMaster.connect(audioCtx.destination);
+  }
+  await audioCtx.resume();
+  return audioCtx;
+}
+function setMasterVolume(value) {
+  audioLevel = Math.max(0, Math.min(1, value));
+  if (audioMaster)
+    audioMaster.gain.setTargetAtTime(audioLevel, audioCtx.currentTime, 0.02);
+}
 function pluck(midi, when, duration = 1.8) {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator(),
@@ -849,7 +900,7 @@ function pluck(midi, when, duration = 1.8) {
   gain.gain.exponentialRampToValueAtTime(0.001, when + duration);
   osc.connect(filter);
   filter.connect(gain);
-  gain.connect(audioCtx.destination);
+  gain.connect(audioMaster || audioCtx.destination);
   osc.start(when);
   osc.stop(when + duration + 0.03);
   activeVoices.push(osc);
@@ -874,9 +925,9 @@ $("#play").onclick = async () => {
     return;
   }
   try {
-    audioCtx =
-      audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    await audioCtx.resume();
+    if (window.FretStudio?.isProgressionPlaying())
+      window.FretStudio.stopTransport();
+    await ensureAudio();
     let notes = midis(),
       mode = $("#playMode").value;
     if (!notes.length) return;
@@ -945,7 +996,7 @@ document.addEventListener("keydown", (e) => {
         saved = previous;
         toast("Não foi possível restaurar.");
       }
-    } else history(e.shiftKey ? "redo" : "undo");
+    } else navigateHistory(e.shiftKey ? "redo" : "undo");
   }
 });
 // Exports are generated locally: a high-resolution PNG and a real downloadable PDF.

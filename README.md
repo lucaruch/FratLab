@@ -25,6 +25,29 @@ HTML, CSS e JavaScript puros. Sem instalação, compilação ou dependências de
 - Reprodução sonora sintetizada, transposição e exemplos musicais.
 - Shapes e rascunhos salvos no navegador.
 - Exportação de PNG e PDF com nome do aluno e anotações opcionais.
+- Metrônomo de 40–240 BPM, tap tempo, compassos de 2 a 7 tempos e quatro subdivisões.
+- Afinador cromático com microfone opcional e sons de referência em cinco afinações, calibrados em 432, 440 ou 442 Hz.
+- Campo harmônico maior e menor natural, progressões prontas e sequência editável de até 16 acordes.
+- Acompanhamento sintetizado em loop, com andamento compartilhado, clique opcional e escolha de compassos por acorde.
+- Treino de ouvido com 4 ou 12 intervalos, repetição do áudio e estatísticas da primeira resposta.
+- Timer de 5 a 30 minutos, pausa, foco de estudo e histórico de sessões concluídas.
+- Busca por título, aluno ou anotação, ordenação, favoritos, duplicação e backup JSON da coleção.
+
+## Praticar
+
+Abra [a área Praticar](https://lucaruch.github.io/FratLab/#praticar) pelo menu lateral. O metrônomo pode acompanhar o braço no Estúdio: uma barra flutuante permite pará-lo de qualquer tela. **Esc** interrompe os sons e desliga o microfone. A reprodução pausa ao sair da aba; o timer de estudo continua contando pelo relógio.
+
+No campo harmônico, clique em um grau para acrescentar o acorde. Reordene ou remova os blocos da sequência, escolha um bloco e use **Abrir acorde no estúdio** para explorar uma digitação. As progressões são tríades diatônicas; o modo menor usa a escala menor natural.
+
+O afinador começa com o microfone desligado. Para medir uma nota, clique em **Ativar microfone** e permita o acesso. A análise acontece no dispositivo: não há gravação ou envio de áudio. Sair da área Praticar, trocar de aba ou pressionar Esc desliga a captura. As cordas de referência funcionam sem microfone.
+
+O treino de ouvido usa intervalos ascendentes. Apenas a primeira resposta conta; ouvir novamente não reduz a pontuação. O timer registra sessões inteiras concluídas; recarregar a página encerra uma sessão ainda em andamento.
+
+![Área Praticar: metrônomo, afinador, harmonia, ouvido e timer](docs/practice.png)
+
+## Backup e dados
+
+Em **Meus shapes**, exporte um **Backup JSON** para guardar ou transferir sua coleção. **Importar** valida o arquivo inteiro antes de salvar: shapes com o mesmo identificador são ignorados e os atuais são preservados. O limite é de 500 shapes e arquivos de até 2 MB. O backup inclui os shapes e suas anotações; preferências, sequência, estatísticas e rascunho atual continuam locais.
 
 ## Executar localmente
 
@@ -42,20 +65,25 @@ Em **Settings → Pages → Build and deployment → Source**, selecione **GitHu
 
 O site usa caminhos relativos e pode ser hospedado no subdiretório do repositório.
 
-## Verificar a análise musical
+## Verificações
 
 Com Node.js 22:
 
 ```sh
 node tests/music.cjs
-
-Para verificar também a sintaxe:
-
-    node --check dist/app.js
-    node --check dist/music.js
-
-O teste musical cobre 461 verificações. A revisão da interface incluiu larguras de 320, 390, 768, 1024 e 1440 pixels, seleção pelo teclado, acordes e escalas, gerador, transposição, afinação alternativa, canhotos, desfazer/refazer, persistência, exclusão/restauração, reprodução, modo aula e download de PNG/PDF.
+node tests/practice.cjs
+node tests/tools.cjs
+node --check dist/app.js
+node --check dist/music.js
+node --check dist/practice.js
+node --check dist/tools.js
 ```
+
+São **713 verificações**: 461 do motor musical, 228 de campo harmônico/detecção de frequência/backup e 24 de integração para o agendamento de áudio, liberação do microfone, conclusão do timer e falha de armazenamento. O CI executa essas verificações antes de publicar.
+
+A revisão no navegador cobre layout responsivo, biblioteca, restauração e rejeição de backups, metrônomo, progressões, referências sonoras, treino de ouvido, timer e as funções anteriores do estúdio. O detector foi validado com sinais sintetizados em 44,1 e 48 kHz, incluindo harmônicos; a captura usa streams simulados nos testes. A precisão com guitarra e microfone reais precisa ser conferida no dispositivo usado para tocar.
+
+Referências técnicas: [permissão de microfone](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia), [amostras de áudio](https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/getFloatTimeDomainData) e [relógio do Web Audio](https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/currentTime).
 
 ## Dados dos alunos
 
