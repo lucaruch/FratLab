@@ -1,0 +1,45 @@
+name: Publicar FretLab
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v6
+      - name: Preparar Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Verificar JavaScript e identificação musical
+        run: |
+          node --check dist/app.js
+          node --check dist/music.js
+          node tests/music.cjs
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+      - name: Enviar site estático
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4
